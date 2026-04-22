@@ -6,6 +6,7 @@ stages:
 
 variables:
   PYTHON_VERSION: "3.11"
+  RUST_VERSION: "1.75"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 cache:
@@ -14,7 +15,7 @@ cache:
     - .cache/pip
     - .venv/
 
-# --- Lint ---
+# --- Python Lint Template ---
 .lint_template:
   stage: lint
   image: python:${PYTHON_VERSION}
@@ -23,16 +24,30 @@ cache:
     - source .venv/bin/activate
     - pip install ruff mypy
 
-lint:01-code-reviewer:
-  extends: .lint_template
-  script:
-    - cd projects/01-code-reviewer && ruff check src/ tests/ && ruff format --check src/ tests/
+# --- Rust Lint Template ---
+.rust_template:
+  stage: lint
+  image: rust:${RUST_VERSION}-bookworm
+  before_script:
+    - rustup component add rustfmt clippy
 
-lint:02-vector-engine:
-  extends: .lint_template
-  script:
-    - cd projects/02-vector-engine && ruff check src/ tests/ && ruff format --check src/ tests/
+# --- Python Test Template ---
+.test_template:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov
 
+# --- Rust Test Template ---
+.rust_test_template:
+  stage: test
+  image: rust:${RUST_VERSION}-bookworm
+  before_script: []
+
+# --- Python Lint ---
 lint:03-rag-system:
   extends: .lint_template
   script:
@@ -48,11 +63,6 @@ lint:05-recsys:
   script:
     - cd projects/05-recsys && ruff check src/ tests/ && ruff format --check src/ tests/
 
-lint:06-llm-inference:
-  extends: .lint_template
-  script:
-    - cd projects/06-llm-inference && ruff check src/ tests/ && ruff format --check src/ tests/
-
 lint:07-finetuning:
   extends: .lint_template
   script:
@@ -63,41 +73,28 @@ lint:08-multimodal:
   script:
     - cd projects/08-multimodal && ruff check src/ tests/ && ruff format --check src/ tests/
 
+# --- Rust Lint ---
+lint:01-code-reviewer:
+  extends: .rust_template
+  script:
+    - cd projects/01-code-reviewer && cargo fmt --check && cargo clippy -- -D warnings
+
+lint:02-vector-engine:
+  extends: .rust_template
+  script:
+    - cd projects/02-vector-engine && cargo fmt --check && cargo clippy -- -D warnings
+
+lint:06-llm-inference:
+  extends: .rust_template
+  script:
+    - cd projects/06-llm-inference && cargo fmt --check && cargo clippy -- -D warnings
+
 lint:09-ai-platform:
-  extends: .lint_template
+  extends: .rust_template
   script:
-    - cd projects/09-ai-platform && ruff check src/ tests/ && ruff format --check src/ tests/
+    - cd projects/09-ai-platform && cargo fmt --check && cargo clippy -- -D warnings
 
-# --- Test ---
-.test_template:
-  stage: test
-  image: python:${PYTHON_VERSION}
-  before_script:
-    - python -m venv .venv
-    - source .venv/bin/activate
-    - pip install -r requirements.txt
-    - pip install pytest pytest-cov
-
-test:01-code-reviewer:
-  extends: .test_template
-  script:
-    - cd projects/01-code-reviewer && pytest tests/ --cov=src/ --cov-report=xml
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: projects/01-code-reviewer/coverage.xml
-
-test:02-vector-engine:
-  extends: .test_template
-  script:
-    - cd projects/02-vector-engine && pytest tests/ --cov=src/ --cov-report=xml
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: projects/02-vector-engine/coverage.xml
-
+# --- Python Test ---
 test:03-rag-system:
   extends: .test_template
   script:
@@ -128,16 +125,6 @@ test:05-recsys:
         coverage_format: cobertura
         path: projects/05-recsys/coverage.xml
 
-test:06-llm-inference:
-  extends: .test_template
-  script:
-    - cd projects/06-llm-inference && pytest tests/ --cov=src/ --cov-report=xml
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: projects/06-llm-inference/coverage.xml
-
 test:07-finetuning:
   extends: .test_template
   script:
@@ -158,15 +145,26 @@ test:08-multimodal:
         coverage_format: cobertura
         path: projects/08-multimodal/coverage.xml
 
-test:09-ai-platform:
-  extends: .test_template
+# --- Rust Test ---
+test:01-code-reviewer:
+  extends: .rust_test_template
   script:
-    - cd projects/09-ai-platform && pytest tests/ --cov=src/ --cov-report=xml
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: projects/09-ai-platform/coverage.xml
+    - cd projects/01-code-reviewer && cargo test --all-features
+
+test:02-vector-engine:
+  extends: .rust_test_template
+  script:
+    - cd projects/02-vector-engine && cargo test --all-features
+
+test:06-llm-inference:
+  extends: .rust_test_template
+  script:
+    - cd projects/06-llm-inference && cargo test --all-features
+
+test:09-ai-platform:
+  extends: .rust_test_template
+  script:
+    - cd projects/09-ai-platform && cargo test --all-features
 
 # --- Build ---
 build:shared:
@@ -181,7 +179,7 @@ build:platform:
   services:
     - docker:dind
   script:
-    - docker build -t platform-gateway:$CI_COMMIT_SHORT_SHA ./projects/09-ai-platform
+    - docker build -t platform-gateway:$CI_COMMIT_SHORT_SHA -f projects/09-ai-platform/Dockerfile .
 
 # --- Deploy ---
 deploy:local:

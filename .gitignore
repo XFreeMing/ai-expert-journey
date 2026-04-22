@@ -42,5 +42,11 @@ htmlcov/
 .mypy_cache/
 coverage.xml
 
+# Rust
+target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
 # Jupyter
 .ipynb_checkpoints/

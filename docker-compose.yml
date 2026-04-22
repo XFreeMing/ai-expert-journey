@@ -26,7 +26,7 @@ services:
       timeout: 5s
       retries: 3
 
-  # --- Project 2: Vector Engine (Milvus for comparison) ---
+  # --- Project 2: Vector Engine (Rust-based) ---
   etcd:
     image: quay.io/coreos/etcd:v3.5.10
     environment:
@@ -57,6 +57,24 @@ services:
       MINIO_SECRET_KEY: minioadmin
     command: minio server /minio_data
     volumes: [minio-data:/minio_data]
+
+  # --- Project 1: Code Reviewer (Rust-based CLI) ---
+  code-reviewer-cli:
+    build:
+      context: .
+      dockerfile: projects/01-code-reviewer/Dockerfile
+    profiles: ["tools"]
+
+  # --- Project 2: Vector Engine API (Rust-based) ---
+  vector-engine-api:
+    build:
+      context: .
+      dockerfile: projects/02-vector-engine/Dockerfile
+    ports: ["8006:8000"]
+    environment:
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
+    depends_on: [milvus]
 
   # --- Project 3: RAG System ---
   rag-api:
@@ -91,20 +109,14 @@ services:
       POSTGRES_URL: postgresql://ai_expert:changeme@postgres:5432/ai_expert
     depends_on: [redis, postgres]
 
-  # --- Project 6: LLM Inference (vLLM) ---
-  vllm-server:
-    image: vllm/vllm-openai:latest
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    ports: ["8004:8000"]
+  # --- Project 6: LLM Inference (Rust-based batch tool) ---
+  llm-inference-tools:
+    build:
+      context: .
+      dockerfile: projects/06-llm-inference/Dockerfile
+    profiles: ["tools"]
     environment:
       HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
-    command: --model Qwen/Qwen2.5-7B-Instruct --tensor-parallel-size 1
     volumes: [model-cache:/root/.cache/huggingface]
 
   # --- Project 7: Fine-Tuning (runs as batch jobs, not a service) ---
@@ -119,19 +131,36 @@ services:
       REDIS_URL: redis://redis:6379
     depends_on: [redis]
 
-  # --- Project 9: Platform Gateway ---
+  # --- Project 9: Platform Gateway (Rust-based) ---
   platform-gateway:
     build:
       context: .
       dockerfile: projects/09-ai-platform/Dockerfile
     ports: ["8000:8000"]
     environment:
+      RUST_LOG: info
       RAG_API_URL: http://rag-api:8000
       AGENT_API_URL: http://agent-orchestrator:8000
       RECSYS_API_URL: http://recsys-api:8000
       MULTIMODAL_API_URL: http://multimodal-api:8000
       VLLM_URL: http://vllm-server:8000
     depends_on: [rag-api, agent-orchestrator, recsys-api, multimodal-api, vllm-server]
+
+  # --- vLLM Server (GPU inference backend) ---
+  vllm-server:
+    image: vllm/vllm-openai:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports: ["8004:8000"]
+    environment:
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
+    command: --model Qwen/Qwen2.5-7B-Instruct --tensor-parallel-size 1
+    volumes: [model-cache:/root/.cache/huggingface]
 
 volumes:
   redis-data:

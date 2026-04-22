@@ -1,17 +1,20 @@
-FROM python:3.11-slim
-
+FROM lukemathwalker/cargo-chef:latest-rust-1.75-bookworm AS chef
 WORKDIR /app
 
-# Shared modules
+FROM chef AS planner
+COPY projects/09-ai-platform/ ./projects/09-ai-platform/
 COPY shared/ ./shared/
+RUN cargo chef prepare --recipe-path recipe.json --manifest-path projects/09-ai-platform/Cargo.toml
 
-# Project dependencies
-COPY projects/09-ai-platform/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json --manifest-path projects/09-ai-platform/Cargo.toml
+COPY projects/09-ai-platform/ ./projects/09-ai-platform/
+COPY shared/ ./shared/
+RUN cargo build --release --bin ai-platform-gateway --manifest-path projects/09-ai-platform/Cargo.toml
 
-# Project source
-COPY projects/09-ai-platform/src/ ./src/
-
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+COPY --from=builder /app/target/release/ai-platform-gateway /usr/local/bin/
 EXPOSE 8000
-
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["ai-platform-gateway"]
