@@ -39,7 +39,7 @@ docker compose logs -f rag-api
 `.gitlab-ci.yml` 定义了四个阶段：
 
 ```
-lint（按项目，Python 用 ruff / Rust 用 clippy） → test（按项目，80% 覆盖率） → build（shared + platform） → deploy（手动触发，仅 main 分支）
+lint（按项目，Python 用 uv run ruff / Rust 用 clippy） → test（按项目，80% 覆盖率） → build（shared + platform） → deploy（手动触发，仅 main 分支）
 ```
 
 1. **推送到任意分支**：lint + test 自动执行
@@ -95,6 +95,18 @@ kill -9 <PID>
 docker compose down && docker compose up -d
 ```
 
+### Python 依赖同步失败
+
+```bash
+# 清理 venv 并重新同步
+rm -rf .venv
+uv venv
+uv sync
+
+# 如果 shared 模块有变更，重新安装 shared
+uv sync --reinstall-package shared
+```
+
 ### Rust 服务构建失败
 
 ```bash
@@ -119,6 +131,9 @@ docker system prune -af
 
 # 清理模型缓存
 rm -rf ~/.cache/ai-expert-journey/
+
+# 清理 uv 缓存
+uv cache clean
 
 # 清理 Rust target 目录
 find projects/ -name target -type d -exec rm -rf {} + 2>/dev/null

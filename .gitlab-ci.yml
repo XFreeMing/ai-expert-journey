@@ -7,12 +7,10 @@ stages:
 variables:
   PYTHON_VERSION: "3.11"
   RUST_VERSION: "1.75"
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - .cache/pip
     - .venv/
 
 # --- Python Lint Template ---
@@ -20,13 +18,12 @@ cache:
   stage: lint
   image: python:${PYTHON_VERSION}
   before_script:
-    - python -m venv .venv
-    - source .venv/bin/activate
-    - pip install ruff mypy
+    - pip install uv --quiet
+    - uv sync --frozen
 
 # --- Rust Lint Template ---
 .rust_template:
-  stage: lint
+  stage:lint
   image: rust:${RUST_VERSION}-bookworm
   before_script:
     - rustup component add rustfmt clippy
@@ -36,10 +33,8 @@ cache:
   stage: test
   image: python:${PYTHON_VERSION}
   before_script:
-    - python -m venv .venv
-    - source .venv/bin/activate
-    - pip install -r requirements.txt
-    - pip install pytest pytest-cov
+    - pip install uv --quiet
+    - uv sync --frozen
 
 # --- Rust Test Template ---
 .rust_test_template:
@@ -51,27 +46,27 @@ cache:
 lint:03-rag-system:
   extends: .lint_template
   script:
-    - cd projects/03-rag-system && ruff check src/ tests/ && ruff format --check src/ tests/
+    - cd projects/03-rag-system && uv run ruff check src/ tests/ && uv run ruff format --check src/ tests/
 
 lint:04-multi-agent:
   extends: .lint_template
   script:
-    - cd projects/04-multi-agent && ruff check src/ tests/ && ruff format --check src/ tests/
+    - cd projects/04-multi-agent && uv run ruff check src/ tests/ && uv run ruff format --check src/ tests/
 
 lint:05-recsys:
   extends: .lint_template
   script:
-    - cd projects/05-recsys && ruff check src/ tests/ && ruff format --check src/ tests/
+    - cd projects/05-recsys && uv run ruff check src/ tests/ && uv run ruff format --check src/ tests/
 
 lint:07-finetuning:
   extends: .lint_template
   script:
-    - cd projects/07-finetuning && ruff check src/ tests/ && ruff format --check src/ tests/
+    - cd projects/07-finetuning && uv run ruff check src/ tests/ && uv run ruff format --check src/ tests/
 
 lint:08-multimodal:
   extends: .lint_template
   script:
-    - cd projects/08-multimodal && ruff check src/ tests/ && ruff format --check src/ tests/
+    - cd projects/08-multimodal && uv run ruff check src/ tests/ && uv run ruff format --check src/ tests/
 
 # --- Rust Lint ---
 lint:01-code-reviewer:
@@ -98,7 +93,7 @@ lint:09-ai-platform:
 test:03-rag-system:
   extends: .test_template
   script:
-    - cd projects/03-rag-system && pytest tests/ --cov=src/ --cov-report=xml
+    - cd projects/03-rag-system && uv run pytest tests/ --cov=src/ --cov-report=xml
   artifacts:
     reports:
       coverage_report:
@@ -108,7 +103,7 @@ test:03-rag-system:
 test:04-multi-agent:
   extends: .test_template
   script:
-    - cd projects/04-multi-agent && pytest tests/ --cov=src/ --cov-report=xml
+    - cd projects/04-multi-agent && uv run pytest tests/ --cov=src/ --cov-report=xml
   artifacts:
     reports:
       coverage_report:
@@ -118,7 +113,7 @@ test:04-multi-agent:
 test:05-recsys:
   extends: .test_template
   script:
-    - cd projects/05-recsys && pytest tests/ --cov=src/ --cov-report=xml
+    - cd projects/05-recsys && uv run pytest tests/ --cov=src/ --cov-report=xml
   artifacts:
     reports:
       coverage_report:
@@ -128,7 +123,7 @@ test:05-recsys:
 test:07-finetuning:
   extends: .test_template
   script:
-    - cd projects/07-finetuning && pytest tests/ --cov=src/ --cov-report=xml
+    - cd projects/07-finetuning && uv run pytest tests/ --cov=src/ --cov-report=xml
   artifacts:
     reports:
       coverage_report:
@@ -138,7 +133,7 @@ test:07-finetuning:
 test:08-multimodal:
   extends: .test_template
   script:
-    - cd projects/08-multimodal && pytest tests/ --cov=src/ --cov-report=xml
+    - cd projects/08-multimodal && uv run pytest tests/ --cov=src/ --cov-report=xml
   artifacts:
     reports:
       coverage_report:
@@ -170,8 +165,10 @@ test:09-ai-platform:
 build:shared:
   stage: build
   image: python:${PYTHON_VERSION}
+  before_script:
+    - pip install uv --quiet
   script:
-    - cd shared && python -m py_compile $(find . -name "*.py")
+    - cd shared && uv run python -m py_compile $(find . -name "*.py")
 
 build:platform:
   stage: build

@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 ```
 ai-expert-journey/
 ├── shared/                    # 跨项目通用模块
+│   ├── pyproject.toml         # shared 包声明
 │   ├── config.py              # ProjectConfig（环境变量管理、路径管理）
 │   ├── models/                # 核心领域模型（BaseModel、MetricResult、Issue、Severity）
 │   └── utils/                 # 工具函数（@timed、@retry 装饰器）
@@ -35,7 +36,7 @@ ai-expert-journey/
 ├── scripts/                   # 自动化脚本
 ├── docker-compose.yml         # 全部服务编排
 ├── .gitlab-ci.yml             # CI/CD 流水线
-└── pyproject.toml             # 根项目配置
+└── pyproject.toml             # uv workspace 配置、ruff、mypy、pytest
 ```
 
 ## 项目架构
@@ -53,8 +54,8 @@ ai-expert-journey/
 |------|------|------|---------|
 | Rust CLI 工具 | 01、02、06 | Rust | `cargo run -- <参数>`，有 Dockerfile（cargo-chef） |
 | Rust 服务 | 09 | Rust (Axum) | `cargo run -- --bind 0.0.0.0:8000`，有 Dockerfile |
-| FastAPI 服务 | 03、04、05、08 | Python | `uvicorn src.main:app --port XXXX`，有 Dockerfile |
-| 训练脚本 | 07 | Python | `python -m src.main`，离线运行，无 Dockerfile |
+| FastAPI 服务 | 03、04、05、08 | Python | `cd projects/XX-xxx && uv run uvicorn src.main:app --port XXXX`，有 Dockerfile（uv） |
+| 训练脚本 | 07 | Python | `cd projects/07-finetuning && uv run python -m src.main`，离线运行，无 Dockerfile |
 
 ### Docker Compose 服务拓扑
 
@@ -73,8 +74,8 @@ platform-gateway:8000 (Rust) ──┬──> rag-api:8001 ──> redis:6379, m
 ### CI 流水线（.gitlab-ci.yml）
 
 四个阶段：`lint` → `test` → `build` → `deploy`
-- lint：Python 项目执行 `ruff check` + `ruff format --check`，Rust 项目执行 `cargo fmt --check` + `cargo clippy -- -D warnings`
-- test：Python 项目执行 `pytest --cov=src/`，Rust 项目执行 `cargo test --all-features`
+- lint：Python 项目执行 `uv run ruff check` + `uv run ruff format --check`，Rust 项目执行 `cargo fmt --check` + `cargo clippy -- -D warnings`
+- test：Python 项目执行 `uv run pytest --cov=src/`，Rust 项目执行 `cargo test --all-features`
 - build：编译 shared 模块 + 构建 platform Docker 镜像
 - deploy：仅 main 分支，手动触发，执行 `docker compose up -d`
 
@@ -104,14 +105,17 @@ scripts/ports.sh logs [svc] # 查看服务日志
 
 ```bash
 # 代码规范检查
-ruff check projects/XX-xxx/src/ tests/
-ruff format projects/XX-xxx/src/ tests/
+uv run ruff check projects/XX-xxx/src/ tests/
+uv run ruff format projects/XX-xxx/src/ tests/
 
 # 类型检查
-mypy projects/XX-xxx/src/ --strict
+uv run mypy projects/XX-xxx/src/ --strict
 
 # 运行测试
-cd projects/XX-xxx && pytest tests/ --cov=src/ --cov-report=term-missing
+cd projects/XX-xxx && uv run pytest tests/ --cov=src/ --cov-report=term-missing
+
+# 添加依赖
+cd projects/XX-xxx && uv add <package>
 ```
 
 ### Rust 项目开发
@@ -170,10 +174,12 @@ scripts/benchmark.sh <project-name>   # 运行指定项目的 benchmark
 ## 关键约束
 
 - 项目 01、02、06、09 是 Rust 项目，有独立的 `Cargo.toml` 和 `src/main.rs`
-- 项目 03、04、05、07、08 是 Python 项目，保持原有 `requirements.txt` 和 `src/main.py`
+- 项目 03、04、05、07、08 是 Python 项目，有独立的 `pyproject.toml`，通过 uv workspace 共享 `shared/` 模块
 - 服务化项目通过 `shared/config.py` 获取配置（仅 Python 项目）
 - Dockerfile 的 build context 是项目根目录（不是项目子目录），可访问 `shared/` 模块
 - Rust Dockerfile 使用 `cargo-chef` 多阶段构建优化缓存
+- Python Dockerfile 使用 `uv sync --frozen` 安装依赖
 - 项目 07（微调）是离线训练任务，不作为服务运行
 - `.env` 已在 `.gitignore` 中，勿提交
 - `Cargo.lock` 已在 `.gitignore` 中
+- `uv.lock` 已提交，确保依赖版本一致

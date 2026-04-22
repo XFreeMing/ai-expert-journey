@@ -1,0 +1,30 @@
+[project]
+name = "rag-system"
+version = "0.1.0"
+description = "Complex Document RAG System - FastAPI service"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "pymupdf>=1.24.0",
+    "python-docx>=1.1.0",
+    "markdown>=3.5.0",
+    "openpyxl>=3.1.0",
+    "pypandoc>=1.12",
+    "sentence-transformers>=2.5.0",
+    "tiktoken>=0.6.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+    "pymilvus>=2.4.0",
+    "redis>=5.0.0",
+    "shared",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.uv.sources]
+shared = { workspace = true }

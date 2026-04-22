@@ -8,6 +8,7 @@
 |------|------|------|
 | Python | >= 3.11 | 运行时（03、04、05、07、08 项目） |
 | Rust | >= 1.75 (stable) | 运行时（01、02、06、09 项目） |
+| uv | latest | Python 依赖管理（全部 Python 项目） |
 | rustup | latest | Rust 工具链管理 |
 | rustfmt | 随 toolchain | 代码格式化 |
 | clippy | 随 toolchain | 代码 lint |
@@ -23,7 +24,7 @@
 git clone <repo-url>
 cd ai-expert-journey
 
-# 2. 一键安装（创建 venv、安装依赖、复制 .env）
+# 2. 一键安装（创建 venv、同步依赖、复制 .env）
 source scripts/setup.sh
 
 # 3. 激活虚拟环境
@@ -42,6 +43,7 @@ cp .env.example .env
 ```
 ai-expert-journey/
 ├── shared/                    # 跨项目通用模块
+│   ├── pyproject.toml         # shared 包声明
 │   ├── config.py              # ProjectConfig（环境管理、路径）
 │   ├── models/                # BaseModel、MetricResult、Issue、Severity
 │   └── utils/                 # @timed、@retry 装饰器
@@ -65,7 +67,7 @@ ai-expert-journey/
 │   └── benchmark.sh           # 单项目基准测试
 ├── docker-compose.yml         # 全部服务 + 基础设施编排
 ├── .gitlab-ci.yml             # CI 流水线（lint/test/build/deploy）
-└── pyproject.toml             # 根项目配置、ruff、mypy、pytest
+└── pyproject.toml             # uv workspace 配置、ruff、mypy、pytest
 ```
 
 ## 可用命令
@@ -76,18 +78,19 @@ ai-expert-journey/
 
 | 命令 | 描述 |
 |------|------|
-| `source scripts/setup.sh` | 引导环境（创建 venv、安装依赖、复制 .env） |
+| `source scripts/setup.sh` | 引导环境（创建 venv、uv sync、复制 .env） |
 | `source .venv/bin/activate` | 激活虚拟环境 |
+| `uv sync` | 同步全部 workspace 依赖 |
 | `rustup show` | 确认 Rust 工具链已安装 |
 | `scripts/ports.sh start` | 启动全部 Docker Compose 服务 |
 | `scripts/ports.sh stop` | 停止全部服务 |
 | `scripts/ports.sh status` | 检查服务状态（基于端口） |
 | `scripts/ports.sh logs [服务名]` | 查看指定服务日志 |
 | `scripts/benchmark.sh <项目名>` | 运行指定项目的基准测试 |
-| `ruff check projects/XX-xxx/src/ tests/` | 检查指定项目的代码规范（Python） |
-| `ruff format projects/XX-xxx/src/ tests/` | 格式化指定项目代码（Python） |
-| `mypy projects/XX-xxx/src/` | 类型检查指定项目（Python） |
-| `pytest projects/XX-xxx/tests/ --cov=src/` | 运行指定项目测试并统计覆盖率（Python） |
+| `uv run ruff check projects/XX-xxx/src/ tests/` | 检查指定项目的代码规范（Python） |
+| `uv run ruff format projects/XX-xxx/src/ tests/` | 格式化指定项目代码（Python） |
+| `uv run mypy projects/XX-xxx/src/` | 类型检查指定项目（Python） |
+| `cd projects/XX-xxx && uv run pytest tests/ --cov=src/` | 运行指定项目测试并统计覆盖率（Python） |
 
 ### Rust 项目命令
 
@@ -108,12 +111,12 @@ ai-expert-journey/
 |------|------|---------|------|
 | `01-code-reviewer` | Rust | `cargo run -- <路径>` | CLI 代码审查工具（支持 --lang、--output） |
 | `02-vector-engine` | Rust | `cargo run -- --mode search` | 向量检索引擎（HNSW） |
-| `03-rag-system` | Python | `uvicorn src.main:app --port 8001` | RAG 知识系统 API 服务 |
-| `04-multi-agent` | Python | `uvicorn src.main:app --port 8002` | 多 Agent 编排器服务 |
-| `05-recsys` | Python | `uvicorn src.main:app --port 8003` | 实时推荐引擎 API |
+| `03-rag-system` | Python | `cd projects/03-rag-system && uv run uvicorn src.main:app --port 8001` | RAG 知识系统 API 服务 |
+| `04-multi-agent` | Python | `cd projects/04-multi-agent && uv run uvicorn src.main:app --port 8002` | 多 Agent 编排器服务 |
+| `05-recsys` | Python | `cd projects/05-recsys && uv run uvicorn src.main:app --port 8003` | 实时推荐引擎 API |
 | `06-llm-inference` | Rust | `cargo run -- --model path/to.gguf` | GGUF 解析 + 推理工具 |
-| `07-finetuning` | Python | `python -m src.main` | 领域模型微调训练（SFT/RLHF） |
-| `08-multimodal` | Python | `uvicorn src.main:app --port 8005` | 多模态创意生成 API |
+| `07-finetuning` | Python | `cd projects/07-finetuning && uv run python -m src.main` | 领域模型微调训练（SFT/RLHF） |
+| `08-multimodal` | Python | `cd projects/08-multimodal && uv run uvicorn src.main:app --port 8005` | 多模态创意生成 API |
 | `09-ai-platform` | Rust | `cargo run -- --bind 0.0.0.0:8000` | 企业中台网关服务（Axum） |
 
 <!-- /AUTO-GENERATED -->
@@ -125,7 +128,7 @@ ai-expert-journey/
 ```bash
 # 测试单个 Python 项目
 cd projects/03-rag-system
-pytest tests/ --cov=src/ --cov-report=term-missing
+uv run pytest tests/ --cov=src/ --cov-report=term-missing
 
 # 测试单个 Rust 项目
 cd projects/01-code-reviewer
@@ -133,7 +136,7 @@ cargo test --all-features
 
 # 测试全部 Python 项目
 for proj in projects/03-rag-system projects/04-multi-agent projects/05-recsys projects/07-finetuning projects/08-multimodal; do
-  cd "$proj" && pytest tests/ --cov=src/ --cov-report=xml || exit 1
+  cd "$proj" && uv run pytest tests/ --cov=src/ --cov-report=xml || exit 1
   cd -
 done
 
@@ -188,12 +191,13 @@ mod tests {
 ### Python 代码规范检查
 
 ```bash
-ruff check projects/XX-xxx/src/ tests/      # 检查规范问题
-ruff format projects/XX-xxx/src/ tests/     # 自动格式化
-ruff check --fix projects/XX-xxx/src/       # 自动修复安全问题
+cd projects/XX-xxx
+uv run ruff check src/ tests/      # 检查规范问题
+uv run ruff format src/ tests/     # 自动格式化
+uv run ruff check --fix src/       # 自动修复安全问题
 ```
 
-配置在 `pyproject.toml` 中：
+配置在根 `pyproject.toml` 中：
 - 规则集：`E`（错误）、`F`（Pyflakes）、`I`（排序）、`N`（命名）、`W`（警告）、`UP`（升级）
 - 行宽限制：100
 - Python 目标版本：3.11
@@ -201,7 +205,8 @@ ruff check --fix projects/XX-xxx/src/       # 自动修复安全问题
 ### Python 类型检查
 
 ```bash
-mypy projects/XX-xxx/src/ --strict
+cd projects/XX-xxx
+uv run mypy src/ --strict
 ```
 
 ### Rust 代码规范检查
@@ -217,18 +222,19 @@ cargo clippy -- -D warnings  # lint（警告视为错误）
 ### Pre-commit（可选）
 
 ```bash
-pre-commit install
+uv run pre-commit install
 ```
 
 ## 提交 PR 检查清单
 
-- [ ] Python 代码规范检查通过（`ruff check`）
-- [ ] Python 类型检查通过（`mypy`）
+- [ ] Python 代码规范检查通过（`uv run ruff check`）
+- [ ] Python 类型检查通过（`uv run mypy`）
 - [ ] Rust 代码格式化通过（`cargo fmt --check`）
 - [ ] Rust lint 通过（`cargo clippy -- -D warnings`）
 - [ ] 测试覆盖率 >= 80%
 - [ ] 架构决策已创建/更新（ADR）
 - [ ] 新增环境变量已同步到 `.env.example`
 - [ ] 新增服务已更新 `docker-compose.yml`
-- [ ] 新增依赖已更新 `requirements.txt`（Python）或 `Cargo.toml`（Rust）
+- [ ] 新增依赖已更新项目 `pyproject.toml`（Python）或 `Cargo.toml`（Rust）
+- [ ] `uv.lock` 已更新并提交
 - [ ] 提交记录中无硬编码密钥或敏感信息

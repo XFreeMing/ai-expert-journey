@@ -7,18 +7,17 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo "Setting up AI Expert Journey environment..."
 
-# Create virtual environment
+# Install uv if not present
 cd "$PROJECT_ROOT"
-if [ ! -d ".venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv .venv
+if ! command -v uv &> /dev/null; then
+    echo "Installing uv..."
+    pip install uv
 fi
 
-source .venv/bin/activate
-
-# Install dependencies
-echo "Installing dependencies..."
-pip install -e ".[dev]" --quiet
+# Create virtual environment and sync dependencies
+echo "Creating virtual environment and syncing dependencies..."
+uv venv
+uv sync
 
 # Copy .env.example if .env doesn't exist
 if [ ! -f ".env" ]; then
@@ -30,7 +29,7 @@ fi
 # Create data directories
 mkdir -p data/{raw,processed,models}
 
-# Install pre-commit hooks
+# Install pre-commit hooks (if available in environment)
 if command -v pre-commit &> /dev/null; then
     echo "Installing pre-commit hooks..."
     pre-commit install

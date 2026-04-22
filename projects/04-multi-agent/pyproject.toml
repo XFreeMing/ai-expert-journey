@@ -1,0 +1,24 @@
+[project]
+name = "multi-agent"
+version = "0.1.0"
+description = "Multi-Agent Orchestration - FastAPI service"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.0.30",
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "pydantic>=2.6.0",
+    "redis>=5.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+    "shared",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.uv.sources]
+shared = { workspace = true }
