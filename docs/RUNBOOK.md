@@ -24,6 +24,9 @@ docker compose up -d --build
 # 仅启动指定服务
 docker compose up -d rag-api recsys-api
 
+# 启动 Rust 工具（按需）
+docker compose --profile tools up code-reviewer-cli vector-engine-api llm-inference-tools
+
 # 重新构建单个服务
 docker compose build rag-api
 
@@ -36,28 +39,29 @@ docker compose logs -f rag-api
 `.gitlab-ci.yml` 定义了四个阶段：
 
 ```
-lint（按项目） → test（按项目，80% 覆盖率） → build（shared + platform） → deploy（手动触发，仅 main 分支）
+lint（按项目，Python 用 ruff / Rust 用 clippy） → test（按项目，80% 覆盖率） → build（shared + platform） → deploy（手动触发，仅 main 分支）
 ```
 
 1. **推送到任意分支**：lint + test 自动执行
 2. **推送到 main**：build 自动执行，deploy 需手动触发
-3. **覆盖率报告**：以 Cobertura 格式上传为构建产物
+3. **覆盖率报告**：以 Cobertura 格式上传为构建产物（Python 项目），Rust 项目运行 `cargo test`
 
 ## 健康检查
 
 <!-- AUTO-GENERATED 来源：docker-compose.yml -->
 
-| 服务名 | 健康检查方式 | 预期结果 |
-|--------|-------------|---------|
-| Redis | `redis-cli ping` | 返回 `PONG` |
-| PostgreSQL | `pg_isready -U ai_expert` | 退出码 0 |
-| etcd | `etcdctl endpoint health` | 返回 healthy |
-| rag-api | `curl http://localhost:8001/` | 200 OK（待实现 /health） |
-| agent-orchestrator | `curl http://localhost:8002/` | 200 OK（待实现 /health） |
-| recsys-api | `curl http://localhost:8003/` | 200 OK（待实现 /health） |
-| vllm-server | `curl http://localhost:8004/health` | 200 OK |
-| multimodal-api | `curl http://localhost:8005/` | 200 OK（待实现 /health） |
-| platform-gateway | `curl http://localhost:8000/` | 200 OK（待实现 /health） |
+| 服务名 | 健康检查方式 | 端口 | 预期结果 |
+|--------|-------------|------|---------|
+| Redis | `redis-cli ping` | 6379 | 返回 `PONG` |
+| PostgreSQL | `pg_isready -U ai_expert` | 5432 | 退出码 0 |
+| etcd | `etcdctl endpoint health` | 2379 | 返回 healthy |
+| platform-gateway | `curl http://localhost:8000/` | 8000 | 200 OK（待实现 /health） |
+| rag-api | `curl http://localhost:8001/` | 8001 | 200 OK（待实现 /health） |
+| agent-orchestrator | `curl http://localhost:8002/` | 8002 | 200 OK（待实现 /health） |
+| recsys-api | `curl http://localhost:8003/` | 8003 | 200 OK（待实现 /health） |
+| vllm-server | `curl http://localhost:8004/health` | 8004 | 200 OK |
+| multimodal-api | `curl http://localhost:8005/` | 8005 | 200 OK（待实现 /health） |
+| vector-engine-api | `curl http://localhost:8006/` | 8006 | 200 OK（待实现 /health） |
 
 ### 快速健康诊断
 
@@ -91,6 +95,22 @@ kill -9 <PID>
 docker compose down && docker compose up -d
 ```
 
+### Rust 服务构建失败
+
+```bash
+# 确认工具链版本
+rustc --version
+cargo --version
+
+# 清理并重新构建
+cd projects/09-ai-platform
+cargo clean
+cargo build --release
+
+# 检查 clippy 警告
+cargo clippy -- -D warnings
+```
+
 ### 磁盘空间不足
 
 ```bash
@@ -99,6 +119,9 @@ docker system prune -af
 
 # 清理模型缓存
 rm -rf ~/.cache/ai-expert-journey/
+
+# 清理 Rust target 目录
+find projects/ -name target -type d -exec rm -rf {} + 2>/dev/null
 
 # 检查各数据卷大小
 docker system df -v
@@ -208,12 +231,13 @@ docker compose exec milvus milvusctl connection list  # 如有 milvusctl
 ## 端口管理速查
 
 ```
-8000  → platform-gateway    （统一入口）
-8001  → rag-api             （RAG 知识系统）
-8002  → agent-orchestrator  （Agent 编排）
-8003  → recsys-api           （推荐引擎）
-8004  → vllm-server          （LLM 推理）
-8005  → multimodal-api       （多模态生成）
+8000  → platform-gateway     （统一入口，Rust/Axum）
+8001  → rag-api              （RAG 知识系统，Python）
+8002  → agent-orchestrator   （Agent 编排，Python）
+8003  → recsys-api            （推荐引擎，Python）
+8004  → vllm-server           （LLM 推理，GPU）
+8005  → multimodal-api        （多模态生成，Python）
+8006  → vector-engine-api     （向量引擎，Rust）
 6379  → Redis
 5432  → PostgreSQL
 19530 → Milvus
