@@ -1,0 +1,197 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  PYTHON_VERSION: "3.11"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .cache/pip
+    - .venv/
+
+# --- Lint ---
+.lint_template:
+  stage: lint
+  image: python:${PYTHON_VERSION}
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install ruff mypy
+
+lint:01-code-reviewer:
+  extends: .lint_template
+  script:
+    - cd projects/01-code-reviewer && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:02-vector-engine:
+  extends: .lint_template
+  script:
+    - cd projects/02-vector-engine && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:03-rag-system:
+  extends: .lint_template
+  script:
+    - cd projects/03-rag-system && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:04-multi-agent:
+  extends: .lint_template
+  script:
+    - cd projects/04-multi-agent && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:05-recsys:
+  extends: .lint_template
+  script:
+    - cd projects/05-recsys && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:06-llm-inference:
+  extends: .lint_template
+  script:
+    - cd projects/06-llm-inference && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:07-finetuning:
+  extends: .lint_template
+  script:
+    - cd projects/07-finetuning && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:08-multimodal:
+  extends: .lint_template
+  script:
+    - cd projects/08-multimodal && ruff check src/ tests/ && ruff format --check src/ tests/
+
+lint:09-ai-platform:
+  extends: .lint_template
+  script:
+    - cd projects/09-ai-platform && ruff check src/ tests/ && ruff format --check src/ tests/
+
+# --- Test ---
+.test_template:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov
+
+test:01-code-reviewer:
+  extends: .test_template
+  script:
+    - cd projects/01-code-reviewer && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/01-code-reviewer/coverage.xml
+
+test:02-vector-engine:
+  extends: .test_template
+  script:
+    - cd projects/02-vector-engine && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/02-vector-engine/coverage.xml
+
+test:03-rag-system:
+  extends: .test_template
+  script:
+    - cd projects/03-rag-system && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/03-rag-system/coverage.xml
+
+test:04-multi-agent:
+  extends: .test_template
+  script:
+    - cd projects/04-multi-agent && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/04-multi-agent/coverage.xml
+
+test:05-recsys:
+  extends: .test_template
+  script:
+    - cd projects/05-recsys && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/05-recsys/coverage.xml
+
+test:06-llm-inference:
+  extends: .test_template
+  script:
+    - cd projects/06-llm-inference && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/06-llm-inference/coverage.xml
+
+test:07-finetuning:
+  extends: .test_template
+  script:
+    - cd projects/07-finetuning && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/07-finetuning/coverage.xml
+
+test:08-multimodal:
+  extends: .test_template
+  script:
+    - cd projects/08-multimodal && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/08-multimodal/coverage.xml
+
+test:09-ai-platform:
+  extends: .test_template
+  script:
+    - cd projects/09-ai-platform && pytest tests/ --cov=src/ --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: projects/09-ai-platform/coverage.xml
+
+# --- Build ---
+build:shared:
+  stage: build
+  image: python:${PYTHON_VERSION}
+  script:
+    - cd shared && python -m py_compile $(find . -name "*.py")
+
+build:platform:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t platform-gateway:$CI_COMMIT_SHORT_SHA ./projects/09-ai-platform
+
+# --- Deploy ---
+deploy:local:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - apk add --no-cache docker-cli
+    - docker compose up -d
+  environment:
+    name: local
+  when: manual
+  only:
+    - main

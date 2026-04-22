@@ -1,0 +1,141 @@
+version: "3.9"
+
+services:
+  # --- Infrastructure ---
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ai_expert
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: ai_expert
+    ports: ["5432:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_expert"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- Project 2: Vector Engine (Milvus for comparison) ---
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.10
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: "1000"
+      ETCD_QUOTA_BACKEND_BYTES: "4294967296"
+    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  milvus:
+    image: milvusdb/milvus:v2.4.0
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    depends_on: [etcd]
+    ports: ["19530:19530"]
+    volumes: [milvus-data:/var/lib/milvus]
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: minio server /minio_data
+    volumes: [minio-data:/minio_data]
+
+  # --- Project 3: RAG System ---
+  rag-api:
+    build:
+      context: .
+      dockerfile: projects/03-rag-system/Dockerfile
+    ports: ["8001:8000"]
+    environment:
+      REDIS_URL: redis://redis:6379
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
+    depends_on: [redis, milvus]
+
+  # --- Project 4: Multi-Agent System ---
+  agent-orchestrator:
+    build:
+      context: .
+      dockerfile: projects/04-multi-agent/Dockerfile
+    ports: ["8002:8000"]
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on: [redis]
+
+  # --- Project 5: Recommendation Engine ---
+  recsys-api:
+    build:
+      context: .
+      dockerfile: projects/05-recsys/Dockerfile
+    ports: ["8003:8000"]
+    environment:
+      REDIS_URL: redis://redis:6379
+      POSTGRES_URL: postgresql://ai_expert:changeme@postgres:5432/ai_expert
+    depends_on: [redis, postgres]
+
+  # --- Project 6: LLM Inference (vLLM) ---
+  vllm-server:
+    image: vllm/vllm-openai:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports: ["8004:8000"]
+    environment:
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
+    command: --model Qwen/Qwen2.5-7B-Instruct --tensor-parallel-size 1
+    volumes: [model-cache:/root/.cache/huggingface]
+
+  # --- Project 7: Fine-Tuning (runs as batch jobs, not a service) ---
+
+  # --- Project 8: Multimodal Generation ---
+  multimodal-api:
+    build:
+      context: .
+      dockerfile: projects/08-multimodal/Dockerfile
+    ports: ["8005:8000"]
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on: [redis]
+
+  # --- Project 9: Platform Gateway ---
+  platform-gateway:
+    build:
+      context: .
+      dockerfile: projects/09-ai-platform/Dockerfile
+    ports: ["8000:8000"]
+    environment:
+      RAG_API_URL: http://rag-api:8000
+      AGENT_API_URL: http://agent-orchestrator:8000
+      RECSYS_API_URL: http://recsys-api:8000
+      MULTIMODAL_API_URL: http://multimodal-api:8000
+      VLLM_URL: http://vllm-server:8000
+    depends_on: [rag-api, agent-orchestrator, recsys-api, multimodal-api, vllm-server]
+
+volumes:
+  redis-data:
+  postgres-data:
+  milvus-data:
+  minio-data:
+  model-cache:
