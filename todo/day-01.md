@@ -1,44 +1,36 @@
 # Day 1 —— 环境验证 + 项目1热身
 
 > 目标：确保开发环境可用，跑通 Rust 项目 01 的编译和测试，建立学习基线。
+> 项目：`projects/01-code-reviewer/`
 
 ---
 
 ## Task 1：验证开发环境可用
 
-**产出物**：环境验证报告（保存到 `todo/day1-env-check.md` 或截图）
+**产出物**：`docs/notes/day1-env-check.md`（环境验证报告，含版本号和关键依赖清单）
 
-- [ ] 1.1 `rustup show` 确认工具链版本（2min）
-- [ ] 1.2 `python --version` 确认 >= 3.11（1min）
-- [ ] 1.3 `source scripts/setup.sh` 创建 venv + 安装依赖（5min）
-- [ ] 1.4 `cp .env.example .env` 并填入真实 API key（2min）
+- [ ] 1.1 运行 `rustup show`，确认 Rust 工具链版本 >= 1.75，记录 edition（15min）
+- [ ] 1.2 运行 `python --version`，确认 >= 3.11；运行 `source scripts/setup.sh` 创建 venv 并安装 Python 依赖（30min）
+- [ ] 1.3 复制 `.env.example` 为 `.env`，填入真实 API key；验证 `shared/config.py` 能正确读取环境变量（20min）
+- [ ] 1.4 将环境信息整理为 Markdown 报告，记录 OS、工具链版本、依赖安装中遇到的问题及解决方式（15min）
 
-## Task 2：跑通 Rust 项目 01 编译
+## Task 2：跑通项目 01 编译与 lint
 
-**产出物**：`cargo build --release` 通过的终端输出截图或日志
+**产出物**：`cargo build --release` 成功生成的二进制文件 + lint 通过的终端输出
 
-- [ ] 2.1 `cd projects/01-code-reviewer`（1min）
-- [ ] 2.2 `cargo check` 看是否有编译错误，记录错误清单（2min）
-- [ ] 2.3 修复编译报错（如有）（3min）
-- [ ] 2.4 `cargo fmt --check && cargo clippy` 通过 lint（2min）
-- [ ] 2.5 `cargo build --release` 生成二进制，记录产物路径（2min）
+- [ ] 2.1 `cd projects/01-code-reviewer`，阅读 `Cargo.toml` 理解依赖结构和 bin/lib 配置（20min）
+- [ ] 2.2 执行 `cargo check`，如有编译错误，逐一排查并修复，记录错误清单和解决方案（30min）
+- [ ] 2.3 执行 `cargo fmt --check && cargo clippy -- -D warnings`，修复所有 lint 告警（20min）
+- [ ] 2.4 执行 `cargo build --release` 生成二进制，记录产物路径和文件大小（10min）
 
-## Task 3：跑通 Rust 项目 01 测试
+## Task 3：跑通项目 01 测试 + 需求拆解笔记
 
-**产出物**：`cargo test` 通过的终端输出（至少 1 个测试）
+**产出物**：`cargo test` 通过输出 + `docs/notes/01-code-reviewer-需求拆解.md`
 
-- [ ] 3.1 阅读 `tests/mod.rs` 现有占位测试，理解结构（2min）
-- [ ] 3.2 `cargo test` 运行测试，记录结果（2min）
-- [ ] 3.3 如果测试为 0，写第一个空测试 `#[test] fn it_works()`（3min）
-- [ ] 3.4 记录覆盖率基线数字（3min）
-
-## Task 4：阅读 README 项目1需求并写笔记
-
-**产出物**：`docs/notes/01-code-reviewer-需求拆解.md`（≤ 500 字）
-
-- [ ] 4.1 重读 README 中项目1的核心算法/技术，标注 4 个技术点（5min）
-- [ ] 4.2 对每个技术点写 2-3 句"我已知"和"我未知"（5min）
-- [ ] 4.3 整理为 Markdown 笔记文件（3min）
+- [ ] 3.1 阅读 `tests/` 目录下的现有测试，理解项目测试结构；执行 `cargo test` 记录结果（20min）
+- [ ] 3.2 如果测试不足，编写至少 2 个有意义的单元测试（如验证配置加载、基础字符串处理等）（30min）
+- [ ] 3.3 重读项目 01 的 README，提取核心技术点（tree-sitter、规则引擎、多语言、报告生成），对每个标注"已知/未知/待验证"（30min）
+- [ ] 3.4 整理为 Markdown 笔记，不超过 500 字（20min）
 
 ---
 
@@ -46,13 +38,13 @@
 
 | 维度 | 状态 |
 |------|------|
-| 环境可用 | ☐ |
-| 项目1可编译 | ☐ |
-| 项目1测试通过（≥1个） | ☐ |
+| 环境验证报告完成 | ☐ |
+| 项目 01 可编译 + lint 通过 | ☐ |
+| 测试通过（≥2个有意义的测试） | ☐ |
 | 需求拆解笔记完成 | ☐ |
 | 今日复盘 | ☐ |
 
-### 今日复盘（5min）
+### 今日复盘
 - 最大收获：
 - 遇到的障碍：
 - 明天需要调整的：
