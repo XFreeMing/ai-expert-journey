@@ -10,7 +10,7 @@
 **产出物**：`projects/03-rag-system/src/models.py` + `src/parsers/pdf.py`
 
 - [ ] 37.1 定义统一 Document 模型：`class Document` 包含 text（完整文本）、metadata（来源、页数、作者等）、sections（层级结构列表，每项含 title、level、text、page_range）（30min）
-- [ ] 37.2 在 `projects/03-rag-system/` 安装 PyMuPDF（`pip install pymupdf`），阅读其基础 API 文档（页面提取、文本提取、表格提取）（20min）
+- [ ] 37.2 在项目根目录执行 `uv add pymupdf`，阅读其基础 API 文档（页面提取、文本提取、表格提取）（20min）
 - [ ] 37.3 实现 `class PDFParser: def parse(file_path: Path) -> Document`，提取全文文本、按页分割、提取页面级 metadata（40min）
 - [ ] 37.4 编写测试：用一个真实 PDF 文件（至少 3 页），验证 text 非空、sections 按页面正确分割、metadata 包含页数信息（20min）
 

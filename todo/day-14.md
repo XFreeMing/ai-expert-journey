@@ -27,7 +27,7 @@
 
 **产出物**：`projects/03-rag-system/src/embedding.py` + 向量化测试
 
-- [ ] 42.1 安装 `sentence-transformers`（`pip install sentence-transformers`），阅读其 API 文档（20min）
+- [ ] 42.1 在项目根目录执行 `uv add sentence-transformers`，阅读其 API 文档（20min）
 - [ ] 42.2 实现 `class Embedder`：`__init__` 加载模型（默认 `all-MiniLM-L6-v2`，支持配置）；`embed(texts: list[str]) -> np.ndarray` 批量编码（30min）
 - [ ] 42.3 编写测试：encode 3 句已知语义的文本，验证输出维度正确（3, 384）；计算 "猫" 和 "狗" 的余弦相似度（预期 > 0.3）；计算 "猫" 和 "汽车" 的相似度（预期 < 0.1）（20min）
 - [ ] 42.4 端到端串联：用一个 Markdown 文件 → Parser → Chunker → Embedder，验证从文件到向量矩阵的完整管线，记录每步耗时（25min）

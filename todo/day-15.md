@@ -18,7 +18,7 @@
 
 **产出物**：`projects/03-rag-system/src/reranker.py` + `src/generator.py` + 端到端测试
 
-- [ ] 44.1 实现简单重排序：先用 BM25（`pip install rank-bm25`）对检索结果做关键词匹配重排，或使用交叉编码器（`cross-encoder/ms-marco-MiniLM-L-6-v2`）做语义重排（40min）
+- [ ] 44.1 实现简单重排序：先用 BM25（`uv add rank-bm25`）对检索结果做关键词匹配重排，或使用交叉编码器（`cross-encoder/ms-marco-MiniLM-L-6-v2`）做语义重排（40min）
 - [ ] 44.2 实现 `class Generator: def generate(query: str, context_chunks: list[Chunk]) -> str`：拼接 prompt（`"基于以下上下文回答问题：\n\n{context}\n\n问题：{query}"`），调用 OpenAI/Claude API 生成回答（30min）
 - [ ] 44.3 实现 prompt 长度控制：当 context 总 token 数超过模型限制时，按相关度截断最少的 chunk（15min）
 - [ ] 44.4 端到端测试：上传一个 Markdown 文档 → 解析 → 分块 → 向量化 → 提问 → 生成回答，验证完整流程无报错（20min）

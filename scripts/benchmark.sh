@@ -23,9 +23,10 @@ if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
     source "$PROJECT_ROOT/.venv/bin/activate"
 fi
 
-# Install project deps
-if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt --quiet
+# Install project deps via uv workspace
+if [ -f "$PROJECT_ROOT/pyproject.toml" ]; then
+    cd "$PROJECT_ROOT" && uv sync --quiet
+    cd "$PROJECT_DIR"
 fi
 
 # Run benchmark if it exists

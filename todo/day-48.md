@@ -14,11 +14,11 @@
 
 ## Task 108：项目8 轻量预习 + 环境准备
 
-**产出物**：`projects/08-multimodal/`（项目 8 初始目录结构 + requirements.txt + 预习笔记）
+**产出物**：`projects/08-multimodal/`（项目 8 初始目录结构 + pyproject.toml 依赖 + 预习笔记）
 
 - [ ] 96.1 阅读项目 8 README，理解多模态创意生成的方向（图像理解 + 图像生成）（15min）
 - [ ] 96.2 创建项目目录结构：`src/{vlm,image_gen,pipeline,utils}/`、`scripts/`、`data/multimodal/{models,benchmark,outputs}`（10min）
-- [ ] 96.3 编写 requirements.txt：torch、transformers、diffusers、accelerate、controlnet-aux、Pillow（10min）
+- [ ] 96.3 确认项目 08 `pyproject.toml` 中已声明 torch、transformers、diffusers、accelerate、controlnet-aux、Pillow 依赖（10min）
 - [ ] 96.4 创建虚拟环境并安装依赖；验证 import 无报错（20min）
 - [ ] 96.5 整理 3-5 篇必读论文/博客链接，保存为 `docs/notes/day48-multimodal-resources.md`（15min）
 

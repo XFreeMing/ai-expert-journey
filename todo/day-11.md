@@ -27,7 +27,7 @@
 
 **产出物**：`projects/02-vector-engine/benchmark/comparison.md` + `projects/02-vector-engine/README.md`
 
-- [ ] 33.1 安装 `faiss-cpu`（`pip install faiss-cpu` 或使用系统包管理器），编写 Python 脚本用同一数据集构建 Faiss IndexFlatL2 和 IndexHNSW（30min）
+- [ ] 33.1 安装 `faiss-cpu`（`uv add faiss-cpu` 或使用系统包管理器），编写 Python 脚本用同一数据集构建 Faiss IndexFlatL2 和 IndexHNSW（30min）
 - [ ] 33.2 记录 Faiss 的构建时间、查询延迟、召回率、内存占用，与 Rust 实现对比（25min）
 - [ ] 33.3 编写对比报告：表格形式展示 Rust HNSW vs Faiss HNSW 的各项指标，分析差距原因（Faiss 的高度优化布局、SIMD、量化技术）（25min）
 - [ ] 33.4 编写项目 02 README：项目简介、安装、使用示例（构建索引/搜索/mmap 加载）、架构说明（HNSW 数据结构 → 搜索算法 → SIMD 优化）、性能指标（20min）

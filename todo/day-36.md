@@ -18,10 +18,10 @@
 
 ## Task 83：微调环境准备 + 框架选型
 
-**产出物**：`projects/07-finetuning/requirements.txt` + 环境验证脚本
+**产出物**：`projects/07-finetuning/pyproject.toml` 依赖确认 + 环境验证脚本
 
 - [ ] 83.1 确定框架栈：PEFT + transformers + accelerate（基础路线）或 Unsloth（加速路线），对比优劣（20min）
-- [ ] 83.2 编写 requirements.txt：锁定 PEFT、transformers、accelerate、bitsandbytes、trl 版本（15min）
+- [ ] 83.2 确认项目 07 `pyproject.toml` 中已声明 PEFT、transformers、accelerate、bitsandbytes、trl 依赖（15min）
 - [ ] 83.3 安装环境，验证 GPU 可达性、CUDA 版本、显存容量（15min）
 - [ ] 83.4 编写环境验证脚本：加载基座模型 + 打印参数信息 + 测试前向传播（20min）
 - [ ] 83.5 下载基座模型到本地缓存，确认模型文件完整（15min）

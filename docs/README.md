@@ -35,6 +35,6 @@
 | 文档 | 真相源 | 生成时机 |
 |------|--------|---------|
 | `docs/ENV.md` | `.env.example` + `docker-compose.yml` + `shared/config.py` | 环境变量变更时 |
-| `docs/CONTRIBUTING.md` | `pyproject.toml` + `scripts/` + `projects/*/src/main.py` + `projects/*/requirements.txt` | 命令/依赖变更时 |
+| `docs/CONTRIBUTING.md` | `pyproject.toml` + `scripts/` + `projects/*/src/main.py` | 命令/依赖变更时 |
 | `docs/RUNBOOK.md` | `docker-compose.yml` + `scripts/ports.sh` | 服务拓扑变更时 |
 | `docs/README.md` | `docs/adr/` 目录 | ADR 新增时 |
