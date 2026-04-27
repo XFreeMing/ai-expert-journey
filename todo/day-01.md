@@ -10,7 +10,7 @@
 **产出物**：`docs/notes/day1-env-check.md`（环境验证报告，含版本号和关键依赖清单）
 
 - [ ] 1.1 运行 `rustup show`，确认 Rust 工具链版本 >= 1.75，记录 edition（15min）
-- [ ] 1.2 运行 `uv python --version`（或 `python3 --version`），确认 >= 3.11；运行 `source scripts/setup.sh` 创建 venv 并同步依赖（30min）
+- [ ] 1.2 运行 `uv python list`（或 `python3 --version`），确认 >= 3.11；运行 `source scripts/setup.sh` 创建 venv 并同步依赖（30min）
 - [ ] 1.3 复制 `.env.example` 为 `.env`，填入真实 API key；验证 `shared/config.py` 能正确读取环境变量（20min）
 - [ ] 1.4 将环境信息整理为 Markdown 报告，记录 OS、工具链版本、依赖安装中遇到的问题及解决方式（15min）
 

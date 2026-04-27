@@ -16,7 +16,7 @@ fi
 
 # Create virtual environment and sync dependencies
 echo "Creating virtual environment and syncing dependencies..."
-uv venv
+uv venv --python 3.14 --allow-existing
 uv sync
 
 # Copy .env.example if .env doesn't exist
