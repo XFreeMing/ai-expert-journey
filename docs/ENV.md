@@ -6,16 +6,11 @@
 
 | 变量名 | 必需 | 描述 | 示例值 | 默认值 |
 |--------|------|------|--------|--------|
-| `OPENAI_API_KEY` | 是 | OpenAI API 密钥 | `sk-xxx` | — |
-| `ANTHROPIC_API_KEY` | 是 | Anthropic API 密钥（Claude） | `sk-ant-xxx` | — |
-| `HF_TOKEN` | 是 | Hugging Face 模型下载令牌 | `hf_xxx` | — |
 | `REDIS_URL` | 是 | Redis 连接字符串 | `redis://localhost:6379` | `redis://localhost:6379` |
 | `POSTGRES_URL` | 是 | PostgreSQL 连接字符串 | `postgresql://user:pass@host:5432/db` | `postgresql://ai_expert:changeme@localhost:5432/ai_expert` |
 | `MILVUS_HOST` | 否 | Milvus 向量数据库主机名 | `localhost` | `localhost` |
 | `MILVUS_PORT` | 否 | Milvus 向量数据库端口 | `19530` | `19530` |
 | `DEFAULT_EMBEDDING_MODEL` | 否 | 默认 Embedding 模型 | `sentence-transformers/all-MiniLM-L6-v2` | `sentence-transformers/all-MiniLM-L6-v2` |
-| `DEFAULT_LLM_MODEL` | 否 | 默认 LLM 生成模型 | `gpt-4o` | `gpt-4o` |
-| `DEFAULT_LLM_PROVIDER` | 否 | 默认 LLM 提供商 | `openai`、`anthropic` | `openai` |
 
 ## Docker Compose 服务编排
 
@@ -36,15 +31,13 @@
 | `rag-api` | 8001 | 8000 | redis、milvus |
 | `agent-orchestrator` | 8002 | 8000 | redis |
 | `recsys-api` | 8003 | 8000 | redis、postgres |
-| `vllm-server` | 8004 | 8000 | NVIDIA GPU（需 GPU 驱动） |
 | `multimodal-api` | 8005 | 8000 | redis |
-| `platform-gateway` | 8000 | 8000 | rag-api、agent-orchestrator、recsys-api、multimodal-api、vllm-server |
+| `platform-gateway` | 8000 | 8000 | rag-api、agent-orchestrator、recsys-api、multimodal-api |
 
 ### 服务级环境变量
 
 | 变量名 | 所属服务 | 描述 |
 |--------|---------|------|
-| `HUGGING_FACE_HUB_TOKEN` | vllm-server | HF 模型下载令牌（从 ${HF_TOKEN} 注入） |
 | `REDIS_URL` | rag-api、agent-orchestrator、recsys-api、multimodal-api | Redis 连接地址 |
 | `MILVUS_HOST` | rag-api | Milvus 服务主机名 |
 | `MILVUS_PORT` | rag-api | Milvus 服务端口 |
@@ -53,7 +46,6 @@
 | `AGENT_API_URL` | platform-gateway | Agent 编排器回调地址 |
 | `RECSYS_API_URL` | platform-gateway | 推荐引擎回调地址 |
 | `MULTIMODAL_API_URL` | platform-gateway | 多模态服务回调地址 |
-| `VLLM_URL` | platform-gateway | vLLM 推理服务地址 |
 
 ### 数据卷
 
@@ -63,7 +55,6 @@
 | `postgres-data` | postgres | PostgreSQL 数据库文件 |
 | `milvus-data` | milvus | Milvus 向量索引数据 |
 | `minio-data` | minio | MinIO 对象存储数据 |
-| `model-cache` | vllm-server | HuggingFace 模型缓存 |
 
 ## 共享模块配置
 
@@ -71,8 +62,6 @@
 
 ```python
 config = ProjectConfig()
-config.openai_api_key      # 从环境变量读取 OPENAI_API_KEY
-config.hf_token            # 从环境变量读取 HF_TOKEN
 config.project_root        # 自动检测项目根目录
 config.data_dir            # ./data/ 目录（自动创建）
 config.model_cache_dir     # ~/.cache/ai-expert-journey/ 模型缓存

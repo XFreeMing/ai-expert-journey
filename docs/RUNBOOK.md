@@ -59,7 +59,6 @@ lint（按项目，Python 用 uv run ruff / Rust 用 clippy） → test（按项
 | rag-api | `curl http://localhost:8001/` | 8001 | 200 OK（待实现 /health） |
 | agent-orchestrator | `curl http://localhost:8002/` | 8002 | 200 OK（待实现 /health） |
 | recsys-api | `curl http://localhost:8003/` | 8003 | 200 OK（待实现 /health） |
-| vllm-server | `curl http://localhost:8004/health` | 8004 | 200 OK |
 | multimodal-api | `curl http://localhost:8005/` | 8005 | 200 OK（待实现 /health） |
 | vector-engine-api | `curl http://localhost:8006/` | 8006 | 200 OK（待实现 /health） |
 
@@ -142,31 +141,6 @@ find projects/ -name target -type d -exec rm -rf {} + 2>/dev/null
 docker system df -v
 ```
 
-### vLLM GPU 无法识别
-
-```bash
-# 验证 NVIDIA 容器运行时
-docker run --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
-
-# 确认 docker-compose.yml 中已配置 GPU：
-#   deploy.resources.reservations.devices[0].driver: nvidia
-
-# 确认 HF_TOKEN 已设置
-echo $HF_TOKEN
-```
-
-### 模型下载失败
-
-```bash
-# 国内镜像方案
-export HF_ENDPOINT=https://hf-mirror.com
-docker compose up -d vllm-server
-
-# 手动下载后挂载
-huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir ./models/qwen2.5-7b
-# 修改 docker-compose.yml，添加 volumes: - ./models:/models
-```
-
 ### Redis 连接被拒绝
 
 ```bash
@@ -225,7 +199,6 @@ docker compose restart redis
 | 高延迟（P99 > 5 秒） | 高 | 检查资源占用，必要时扩容 |
 | 模型精度下降 | 中 | 重新运行评测套件，必要时回滚 |
 | 磁盘使用率 > 90% | 高 | 清理 Docker 缓存、修剪数据卷 |
-| API 密钥过期 | 高 | 更新 .env 中的密钥，重启相关服务 |
 
 ## 监控
 
@@ -250,7 +223,6 @@ docker compose exec milvus milvusctl connection list  # 如有 milvusctl
 8001  → rag-api              （RAG 知识系统，Python）
 8002  → agent-orchestrator   （Agent 编排，Python）
 8003  → recsys-api            （推荐引擎，Python）
-8004  → vllm-server           （LLM 推理，GPU）
 8005  → multimodal-api        （多模态生成，Python）
 8006  → vector-engine-api     （向量引擎，Rust）
 6379  → Redis

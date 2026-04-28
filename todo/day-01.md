@@ -11,7 +11,7 @@
 
 - [ ] 1.1 运行 `rustup show`，确认 Rust 工具链版本 >= 1.75，记录 edition（15min）
 - [ ] 1.2 运行 `uv python list`（或 `python3 --version`），确认 >= 3.11；运行 `source scripts/setup.sh` 创建 venv 并同步依赖（30min）
-- [ ] 1.3 复制 `.env.example` 为 `.env`，填入真实 API key；验证 `shared/config.py` 能正确读取环境变量（20min）
+- [ ] 1.3 确认 `.env.example` 存在即可，Day 1 项目（Rust CLI）不调用任何 LLM API，无需填写真实 key（5min）
 - [ ] 1.4 将环境信息整理为 Markdown 报告，记录 OS、工具链版本、依赖安装中遇到的问题及解决方式（15min）
 
 ## Task 2：跑通项目 01 编译与 lint

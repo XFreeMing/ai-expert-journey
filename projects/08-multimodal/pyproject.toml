@@ -9,7 +9,6 @@ dependencies = [
     "torch>=2.2.0",
     "torchvision>=0.17.0",
     "controlnet-aux>=0.0.7",
-    "openai-clip>=1.0.1",
     "Pillow>=10.2.0",
     "replicate>=0.24.0",
     "fastapi>=0.110.0",

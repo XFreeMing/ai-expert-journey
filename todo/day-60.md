@@ -23,15 +23,12 @@
 - [ ] 131.4 编写限流中间件：请求超限时返回 429 Too Many Requests，附带 Retry-After header（15min）
 - [ ] 131.5 编写集成测试：模拟多个请求验证负载均衡分发结果符合预期；快速发送超过限制的请求验证限流生效（15min）
 
-## Task 144：API Key 认证 + 后端代理
+## Task 144：请求代理 Handler
 
-**产出物**：`projects/09-ai-platform/src/services/api_key_store.rs` + `src/handlers/proxy.rs`
+**产出物**：`projects/09-ai-platform/src/handlers/proxy.rs`
 
-- [ ] 132.1 定义 ApiKey 结构体：key 值（SHA256 哈希存储）、拥有者、权限列表（可访问的模型）、创建时间、过期时间、限流配置（20min）
-- [ ] 132.2 实现 ApiKeyStore：内存存储 API Key，支持增删查，key 值以哈希形式存储（不存明文）（15min）
-- [ ] 132.3 编写 API Key 认证 Extractor：从 Authorization: Bearer <key> 或 X-API-Key header 提取并验证，无效返回 401（20min）
-- [ ] 132.4 编写代理 Handler：接收客户端请求 -> 验证 API Key -> 路由到后端 -> 转发请求 -> 返回后端响应（20min）
-- [ ] 132.5 编写端到端测试脚本 `scripts/test_auth.sh`：用 curl 测试完整认证 -> 路由 -> 限流流程（10min）
+- [ ] 132.4 编写代理 Handler：接收客户端请求 -> 路由到后端 -> 转发请求 -> 返回后端响应（20min）
+- [ ] 132.5 编写集成测试脚本 `scripts/test_proxy.sh`：用 curl 测试完整代理流程（10min）
 
 ---
 
@@ -41,7 +38,7 @@
 |------|------|
 | 路由分发服务 + 健康检查 | ☐ |
 | 负载均衡器 + 限流中间件 | ☐ |
-| API Key 认证 + 代理 Handler | ☐ |
+| 代理 Handler + 集成测试 | ☐ |
 | 今日复盘 | ☐ |
 
 ### 今日复盘（5min）

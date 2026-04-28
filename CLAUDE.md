@@ -44,7 +44,7 @@ ai-expert-journey/
 ### 共享模块（shared/）
 
 所有 Python 项目依赖的通用模块：
-- `ProjectConfig`：自动检测项目根目录、管理 `.env` 变量、提供 `openai_api_key` / `hf_token` 属性
+- `ProjectConfig`：自动检测项目根目录、管理 `.env` 变量、提供 `default_embedding_model` 等属性
 - 领域模型：`BaseModel`（UUID + 时间戳）、`MetricResult`（评测结果）、`Issue`（问题发现记录，含 Severity 枚举）
 - 工具函数：`@timed`（执行时间测量）、`@retry`（指数退避重试）
 
@@ -64,7 +64,6 @@ platform-gateway:8000 (Rust) ──┬──> rag-api:8001 ──> redis:6379, m
                                ├──> agent-orchestrator:8002 ──> redis:6379
                                ├──> recsys-api:8003 ──> redis:6379, postgres:5432
                                ├──> multimodal-api:8005 ──> redis:6379
-                               ├──> vllm-server:8004 ──> GPU（需要 NVIDIA）
                                └──> vector-engine-api:8006 (Rust)
 
 基础设施：redis、postgres、etcd、milvus、minio
@@ -165,9 +164,8 @@ scripts/benchmark.sh <project-name>   # 运行指定项目的 benchmark
 
 ## 环境变量
 
-必需：`OPENAI_API_KEY`、`ANTHROPIC_API_KEY`、`HF_TOKEN`
 基础设施：`REDIS_URL`（默认 redis://localhost:6379）、`POSTGRES_URL`、`MILVUS_HOST`、`MILVUS_PORT`
-模型配置：`DEFAULT_EMBEDDING_MODEL`、`DEFAULT_LLM_MODEL`、`DEFAULT_LLM_PROVIDER`
+模型配置：`DEFAULT_EMBEDDING_MODEL`
 
 详见 `docs/ENV.md`。
 

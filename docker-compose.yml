@@ -115,9 +115,6 @@ services:
       context: .
       dockerfile: projects/06-llm-inference/Dockerfile
     profiles: ["tools"]
-    environment:
-      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
-    volumes: [model-cache:/root/.cache/huggingface]
 
   # --- Project 7: Fine-Tuning (runs as batch jobs, not a service) ---
 
@@ -143,28 +140,10 @@ services:
       AGENT_API_URL: http://agent-orchestrator:8000
       RECSYS_API_URL: http://recsys-api:8000
       MULTIMODAL_API_URL: http://multimodal-api:8000
-      VLLM_URL: http://vllm-server:8000
-    depends_on: [rag-api, agent-orchestrator, recsys-api, multimodal-api, vllm-server]
-
-  # --- vLLM Server (GPU inference backend) ---
-  vllm-server:
-    image: vllm/vllm-openai:latest
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    ports: ["8004:8000"]
-    environment:
-      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
-    command: --model Qwen/Qwen2.5-7B-Instruct --tensor-parallel-size 1
-    volumes: [model-cache:/root/.cache/huggingface]
+    depends_on: [rag-api, agent-orchestrator, recsys-api, multimodal-api]
 
 volumes:
   redis-data:
   postgres-data:
   milvus-data:
   minio-data:
-  model-cache:
